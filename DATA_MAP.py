@@ -53,3 +53,30 @@ df.drop('tender_from_name', axis=1, inplace=True)
 
 print(df.dtypes)
 print(df)
+import folium
+from geopy.geocoders import Nominatim
+import pandas as pd
+
+# Assuming you have a DataFrame df with the required columns
+
+# Filter rows with region_code not equal to 0
+df_filtered = df[df['region_code'] != 0]
+
+# Create a map centered around Russia
+map_russia = folium.Map(location=[55.7558, 37.6176], zoom_start=3)
+
+# Geocode region names to get latitude and longitude
+geolocator = Nominatim(user_agent="tenders_map")
+
+for index, row in df_filtered.iterrows():
+    location = geolocator.geocode(row['region_name'])
+    if location:
+        # Add a marker for each tender
+        folium.Marker(
+            location=[location.latitude, location.longitude],
+            popup=f"Tender: {row['tender_name']}\nRegion: {row['region_name']}\nPrice: {row['tender_price']}",
+            icon=folium.Icon(color='blue')
+        ).add_to(map_russia)
+
+# Save the map as an HTML file
+map_russia.save('tenders_map.html')
